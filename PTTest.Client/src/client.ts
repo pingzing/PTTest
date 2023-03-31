@@ -1,1 +1,0 @@
-const canvas: HTMLCanvasElement = document.getElementById('pttest-canvas') as HTMLCanvasElement;

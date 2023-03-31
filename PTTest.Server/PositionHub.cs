@@ -5,6 +5,7 @@ namespace PTTest.Server;
 
 public class PositionHub : Hub
 {
+    private const string InitializeName = "Initialize";
     private const string PushPositionsName = "PushPositions";
 
     private readonly ConcurrentDictionary<string, Guid> _activeConnections = new();
@@ -23,7 +24,7 @@ public class PositionHub : Hub
         // Whenever a client (re)connects, give them a new ID.
         Guid playerId = Guid.NewGuid();
         _activeConnections.AddOrUpdate(Context.ConnectionId, playerId, (cid, pid) => pid);
-        Clients.Caller.SendAsync("Initialize", playerId);
+        Clients.Caller.SendAsync(InitializeName, playerId);
 
         return Task.CompletedTask;
     }
