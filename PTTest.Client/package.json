@@ -1,0 +1,17 @@
+{
+  "name": "PTTest.Client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "PingZing",
+  "license": "MIT",
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.3"
+  },
+  "dependencies": {
+    "@microsoft/signalr": "^7.0.4"
+  }
+}
