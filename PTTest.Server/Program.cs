@@ -14,7 +14,7 @@ public class Program
         );
 
         // Allow ALL THE THINGS
-        // Hilariously insecure, but it's throwaway code.
+        // Hilariously insecure, but hey, it's throwaway code.
         builder.Services.AddCors(
             options =>
                 options.AddPolicy(

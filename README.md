@@ -43,17 +43,17 @@ Requirements:
 
  Building the container:
 
- From the repository root, run
+ Navigate to `/PTTest.Server`, and run
  ```bash
- docker build -f ".\PTTest.Server\Dockerfile" . --tag=pttest.server
+ docker build -f ./Dockerfile . --tag=pttest.server
  ```
 
  Running the container:
  ```bash
- docker run -dt -e "ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS=true" -e "ASPNETCORE_ENVIRONMENT=Development" -e "ASPNETCORE_URLS=http://+:80" -e "DOTNET_USE_POLLING_FILE_WATCHER=1" -P --name PTTest.Server pttest.server
+ docker run -dt -e "ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS=true" -e "ASPNETCORE_ENVIRONMENT=Development" -e "ASPNETCORE_URLS=http://+:80" -e "DOTNET_USE_POLLING_FILE_WATCHER=1" -p 5276:80 --name PTTest.Server pttest.server
  ```
 
- The `-P` flag will have Docker bind port 80 to an arbitrary, open port.
+ If the client's base URL is configured to look for another port, change the `-p 5276:80` flag from `5276` to whichever port the client is trying to connect on.
 
  ### Building the Client
 
@@ -72,5 +72,18 @@ Requirements:
  ```
 
  The generated webpage will be in `./dist`.
+
+ #### Docker
+
+ (Note that the generated container is not runnable--it's only a wrapper around the output.)
+
+ Navigate to `/PTTest.Client` and run
+ ```bash
+ docker buildx build -f ./Dockerfile . --tag=pttest.client --output type=local,dest=./
+ ```
+
+ The generated webpage will be in `./dist`.
+
+
 
 
