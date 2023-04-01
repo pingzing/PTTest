@@ -93,7 +93,7 @@ public class PositionService : BackgroundService, IPositionService
     {
         bool playerRemoved = _currentPositions.TryRemove(playerId, out _);
         _logger.LogInformation(
-            "Attempted to remove player {pid} from PositionService. Succes?: {removed}",
+            "Attempted to remove player {pid} from PositionService. Success?: {removed}",
             playerId,
             playerRemoved
         );

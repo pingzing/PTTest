@@ -49,9 +49,9 @@ public class Program
         // Register endpoints to control test mode.
         app.MapGet(
             "/testmode",
-            (TestModeService testService) =>
+            (TestModeService testService, int? playerCount) =>
             {
-                testService.EngageTestMode(1000);
+                testService.EngageTestMode(playerCount ?? 1000);
             }
         );
         app.MapGet(
