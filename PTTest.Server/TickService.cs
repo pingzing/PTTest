@@ -1,22 +1,27 @@
 ﻿using System.Diagnostics;
+using Microsoft.AspNetCore.SignalR;
 
 namespace PTTest.Server;
 
+/// <summary>
+/// Service for ticking the state of the server forward, and communicating that state to all clients.
+/// </summary>
 public class TickService : BackgroundService
 {
     private const int TickRate = 30;
+    private const string PushPositionsName = "PushPositions";
     private static readonly TimeSpan TimePerTick = TimeSpan.FromMilliseconds(1000 / TickRate);
 
     private readonly ILogger<TickService> _logger;
     private readonly IPositionService _positionService;
-    private readonly PositionHub _positionHub;
+    private readonly IHubContext<PositionApiHub> _positionHub;
 
     private Stopwatch _stopwatch;
 
     public TickService(
         ILogger<TickService> logger,
         IPositionService positionService,
-        PositionHub positionHub
+        IHubContext<PositionApiHub> positionHub
     )
     {
         _logger = logger;
@@ -49,6 +54,10 @@ public class TickService : BackgroundService
     private async Task Tick(CancellationToken stoppingToken)
     {
         ICollection<PlayerPosition> latestPositions = _positionService.GetLatestPositions();
-        await _positionHub.UpdateClients(latestPositions);
+        await _positionHub.Clients.All.SendAsync(
+            method: PushPositionsName,
+            latestPositions,
+            stoppingToken
+        );
     }
 }

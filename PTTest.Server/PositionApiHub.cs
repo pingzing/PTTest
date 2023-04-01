@@ -3,22 +3,26 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace PTTest.Server;
 
-public class PositionHub : Hub
+/// <summary>
+/// Exposes methods that clients may call via the SignalR connection, as well as
+/// connection lifecycle methods.
+/// </summary>
+public class PositionApiHub : Hub
 {
     private const string InitializeName = "Initialize";
-    private const string PushPositionsName = "PushPositions";
 
-    private readonly ConcurrentDictionary<string, Guid> _activeConnections = new();
-    private readonly ILogger<PositionHub> _logger;
+    // Tracks connection IDs and all connected players.
+    private static readonly ConcurrentDictionary<string, Guid> _activeConnections = new();
+
+    private readonly ILogger<PositionApiHub> _logger;
     private readonly IPositionService _positionService;
 
-    public PositionHub(ILogger<PositionHub> logger, IPositionService positionService)
+    public PositionApiHub(ILogger<PositionApiHub> logger, IPositionService positionService)
     {
         _logger = logger;
         _positionService = positionService;
     }
 
-    // Client methods
     public override Task OnConnectedAsync()
     {
         // Whenever a client (re)connects, give them a new ID.
@@ -32,6 +36,11 @@ public class PositionHub : Hub
     public override Task OnDisconnectedAsync(Exception? exception)
     {
         bool removed = _activeConnections.TryRemove(Context.ConnectionId, out Guid playerId);
+        if (removed)
+        {
+            _positionService.RemovePlayer(playerId);
+        }
+
         _logger.LogInformation(
             "Attempted to remove connection {cid} associated with player {pid}. Success?: {removed}",
             Context.ConnectionId,
@@ -39,25 +48,15 @@ public class PositionHub : Hub
             removed
         );
 
-        // TODO: Pause ticking if this was the last client.
+        // Room for improvement: Turn off the PositionService and TickService if no clients connected;
 
         return Task.CompletedTask;
     }
 
+    // Clients must use this method name with exact spelling in order to call it.
     public Task SendPosition(Guid playerId, float x, float y)
     {
         _positionService.WritePosition(new PlayerPosition(playerId, x, y));
         return Task.CompletedTask;
-    }
-
-    // Server methods
-
-    /// <summary>
-    /// Send the latest set of positions to all clients.
-    /// </summary>
-    /// <param name="positions">The most up-to-date list of positions.</param>
-    public async Task UpdateClients(ICollection<PlayerPosition> positions)
-    {
-        await Clients.All.SendAsync(PushPositionsName, positions);
     }
 }

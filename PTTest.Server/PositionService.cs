@@ -4,19 +4,33 @@ using System.Threading.Channels;
 
 namespace PTTest.Server;
 
-// The interface isn't strictly necessary, but would make unit testing easier.
-// Also limits API surface area.
+/// <summary>
+/// Service for maintaining an up-to-date list of where every player is located.
+/// </summary>
 public interface IPositionService
 {
+    /// <summary>
+    /// Write a position update to the update stream.
+    /// </summary>
+    /// <param name="position">The position to write.</param>
     void WritePosition(PlayerPosition position);
+
+    /// <summary>
+    /// Get the most up-to-date list of positions.
+    /// </summary>
     ICollection<PlayerPosition> GetLatestPositions();
+
+    /// <summary>
+    /// Remove the given player from the maintained list of positions.
+    /// </summary>
+    /// <param name="playerId">ID of the player to remove.</param>
+    void RemovePlayer(Guid playerId);
 }
 
 public class PositionService : BackgroundService, IPositionService
 {
-    // A nice-to-have would be TTLs for entries in _currentPositions, so we could remove players who have been idle too long.
-    private ConcurrentDictionary<Guid, PlayerPosition> _currentPositions = new();
-    private Channel<PlayerPosition> _positionUpdates;
+    private readonly ConcurrentDictionary<Guid, PlayerPosition> _currentPositions = new();
+    private readonly Channel<PlayerPosition> _positionUpdates;
     private readonly ILogger<PositionService> _logger;
 
     public PositionService(ILogger<PositionService> logger)
@@ -53,15 +67,11 @@ public class PositionService : BackgroundService, IPositionService
         {
             while (_positionUpdates.Reader.TryRead(out PlayerPosition posUpdate))
             {
-                _currentPositions.AddOrUpdate(posUpdate.Id, posUpdate, (id, newPos) => newPos);
+                _currentPositions.AddOrUpdate(posUpdate.Id, posUpdate, (id, newPos) => posUpdate);
             }
         }
     }
 
-    /// <summary>
-    /// Write a position update to the update stream.
-    /// </summary>
-    /// <param name="position">The position to write.</param>
     public void WritePosition(PlayerPosition position)
     {
         bool writeSuccees = _positionUpdates.Writer.TryWrite(position);
@@ -74,11 +84,18 @@ public class PositionService : BackgroundService, IPositionService
         }
     }
 
-    /// <summary>
-    /// Get the most up-to-date list of positions.
-    /// </summary>
     public ICollection<PlayerPosition> GetLatestPositions()
     {
         return _currentPositions.Values.ToImmutableArray();
+    }
+
+    public void RemovePlayer(Guid playerId)
+    {
+        bool playerRemoved = _currentPositions.TryRemove(playerId, out _);
+        _logger.LogInformation(
+            "Attempted to remove player {pid} from PositionService. Succes?: {removed}",
+            playerId,
+            playerRemoved
+        );
     }
 }
