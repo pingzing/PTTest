@@ -52,3 +52,25 @@ Requirements:
  ```bash
  docker run -dt -e "ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS=true" -e "ASPNETCORE_ENVIRONMENT=Development" -e "ASPNETCORE_URLS=http://+:80" -e "DOTNET_USE_POLLING_FILE_WATCHER=1" -P --name PTTest.Server pttest.server
  ```
+
+ The `-P` flag will have Docker bind port 80 to an arbitrary, open port.
+
+ ### Building the Client
+
+ #### Native (e.g non-Docker)
+
+ Requirements: 
+  - NodeJS 18.15.0
+  - npm 9.5.0
+
+ Navigate to `/PTTest.Client`.
+
+ Then, run
+ ```bash
+ npm ci
+ npx webpack
+ ```
+
+ The generated webpage will be in `./dist`.
+
+
